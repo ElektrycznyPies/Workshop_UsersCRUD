@@ -1,4 +1,4 @@
-package pl.coderslab.entity;
+package pl.coderslab.model;
 import java.sql.*;
 
 public class User {

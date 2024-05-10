@@ -1,9 +1,11 @@
-package pl.coderslab.entity;
+package pl.coderslab.dao;
 import org.mindrot.jbcrypt.BCrypt;
+import pl.coderslab.model.User;
 import pl.coderslab.utils.DbUtil;
 
 import java.sql.*;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserDao extends DbUtil {
     private static final String CREATE_USER_QUERY = "INSERT INTO users(username, email, password) VALUES (?, ?, ?)";
@@ -22,7 +24,7 @@ public class UserDao extends DbUtil {
             prepStat.executeUpdate();
 
             ResultSet rs = prepStat.getGeneratedKeys();
-            //Pobieramy wstawiony do bazy identyfikator, a następnie ustawiamy id obiektu user:
+
             if (rs.next()) {
                 user.setId(rs.getInt(1));
             }
@@ -102,12 +104,13 @@ public class UserDao extends DbUtil {
 
     //      LIST ALL
 
-    public User[] findAll() {
-        try (Connection conn = DbUtil.getConnection();
-             PreparedStatement prepStat = conn.prepareStatement(LIST_ALL_QUERY)) {
-            ResultSet rs = prepStat.executeQuery();
+    public List<User> findAll() {
+        List<User> userList = new ArrayList<>();
 
-            User[] allUsers = new User[0];
+        try (Connection conn = DbUtil.getConnection()) {
+
+            PreparedStatement prepStat = conn.prepareStatement(LIST_ALL_QUERY);
+            ResultSet rs = prepStat.executeQuery();
 
             while (rs.next()) {
                 User nextUser = new User();
@@ -115,21 +118,12 @@ public class UserDao extends DbUtil {
                 nextUser.setUserName(rs.getString("username"));
                 nextUser.setEmail(rs.getString("email"));
                 nextUser.setPassword(rs.getString("password"));
-                //AlBO  User nextUser = new User(rs.getInt("id"), rs.getString("username"), rs.getString("email"), rs.getString("password"));
-                allUsers = addToArray(nextUser, allUsers);
+                userList.add(nextUser);
             }
-            return allUsers;
-
+            return userList;
         } catch (SQLException e) {
             System.out.println("Database problem: " + e.getMessage());
+            return null;
         }
-        return null;
     }
-
-    private User[] addToArray(User u, User[] users) {
-        User[] tmpUsers = Arrays.copyOf(users, users.length + 1); // Tworzymy kopię tablicy powiększoną o 1.
-        tmpUsers[users.length] = u; // Dodajemy obiekt na ostatniej pozycji.
-        return tmpUsers; // Zwracamy nową tablicę.
-    }
-
 }
